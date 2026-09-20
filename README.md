@@ -1,3 +1,4 @@
+![Security Pipeline](https://github.com/VINARKHEDE/devsecops-pipeline-project/actions/workflows/security.yml/badge.svg)
 # Automated DevSecOps CI/CD Security Pipeline
 
 ## Overview
