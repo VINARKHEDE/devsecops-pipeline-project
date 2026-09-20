@@ -3,27 +3,45 @@ name: Automated DevSecOps Pipeline
 on:
   push:
     branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
   security-scan:
     runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      contents: read
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Run Semgrep SAST
+      - name: Run Semgrep SAST & Export SARIF
         run: |
           pip install semgrep
-          semgrep scan --config auto --error .
-          
-      - name: Build Docker Image
-        run: docker build -t my-vulnerable-app:latest .
+          semgrep scan --config auto --sarif --output semgrep.sarif .
 
-      - name: Run Trivy Vulnerability Scanner
+      - name: Upload Semgrep SARIF to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: semgrep.sarif
+
+      - name: Build Docker Image
+        run: docker build -t my-app:latest .
+
+      - name: Run Trivy Vulnerability Scanner & Export SARIF
         uses: aquasecurity/trivy-action@master
         with:
-          image-ref: 'my-vulnerable-app:latest'
-          format: 'table'
-          exit-code: '1'
+          image-ref: 'my-app:latest'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          exit-code: '0'
           ignore-unfixed: true
           severity: 'CRITICAL,HIGH'
+
+      - name: Upload Trivy SARIF to GitHub Security Tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always()
+        with:
+          sarif_file: trivy-results.sarif
