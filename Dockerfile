@@ -1,5 +1,5 @@
-# Use an older base image so Trivy catches known vulnerabilities
-FROM python:3.6-slim
+# SECURE: Upgraded to Python 3.11 slim to patch OS vulnerabilities
+FROM python:3.11-slim
 
 WORKDIR /app
 
